@@ -1,0 +1,21 @@
+[remote:children]
+production
+staging
+
+[servers:children]
+production
+staging
+local
+
+[production]
+cutenessmap.com nickname=production vm=0 branch=master
+
+[staging]
+staging.nessmap.com nickname=staging vm=0 branch=develop
+
+[local]
+127.0.0.1 nickname=local vm=1 branch=master
+
+[local:vars]
+ansible_ssh_user=vagrant
+ansible_ssh_pass=vagrant

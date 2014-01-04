@@ -1,0 +1,25 @@
+project_name: nessmap
+project_root: /var/projects/nessmap
+deploy_key: files/keys/deploy.pem
+project_repo: git@bitbucket.org:jmickela/nessmap-website.git
+locale: en_US.UTF-8
+system_packages:
+  - build-essential
+  - git
+  # - libevent-dev
+  - nginx
+  - gunicorn
+  - postgresql
+  - postgresql-server-dev-all
+  - python-dev
+  - python-setuptools
+  - redis-server
+  - postfix
+  - nano
+python_packages:
+  - pip
+  - virtualenv
+  - django
+  - psycopg2
+initfiles:
+  - gunicorn

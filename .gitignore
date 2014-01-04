@@ -1,0 +1,4 @@
+app/*
+*.pyc
+.vagrant/*
+deployment/files/keys/*

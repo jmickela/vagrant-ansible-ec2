@@ -1,0 +1,20 @@
+---
+- name: Creating Template Database
+  postgresql_db: name=template_postgis encoding='UTF-8' lc_collate='en_US.UTF-8' lc_ctype='en_US.UTF-8'
+
+- name: Populating Template
+  command: psql -d template_postgis -f /usr/share/postgresql/9.1/contrib/postgis-1.5/postgis.sql
+
+- name: Populating Template
+  command: psql -d template_postgis -f /usr/share/postgresql/9.1/contrib/postgis-1.5/spatial_ref_sys.sql
+
+- name: Creating the database.
+  postgresql_db: name=nessmap encoding='UTF-8' lc_collate='en_US.UTF-8' lc_ctype='en_US.UTF-8' template='template_postgis'
+#- postgresql_db: name=nessmap encoding='UTF-8' lc_collate='en_US.UTF-8' lc_ctype='en_US.UTF-8'
+
+#create nessmap user
+
+#- name: Syncing Database
+
+#run sync and migrate
+#load data
