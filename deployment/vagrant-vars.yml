@@ -1,3 +1,4 @@
+domain_name: local.nessmap.com
 vagrant_packages:
   - build-essential
   - postgresql-9.1

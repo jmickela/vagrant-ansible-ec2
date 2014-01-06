@@ -52,7 +52,7 @@
     #setup database data
 
   - name: Install nginx configuration file.
-    copy: src=files/conf/nginx.conf dest=/etc/nginx/sites-enabled/{{ project_name }}
+    template: src=files/conf/nginx.conf.j2 dest=/etc/nginx/sites-enabled/{{ project_name }}
     #notify: restart nginx
 
   # - name: Install init scripts.
