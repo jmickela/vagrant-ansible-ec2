@@ -1,82 +1,78 @@
 ---
-- hosts: servers
+- hosts: remote
+  remote_user: ubuntu
+  gather_facts: False
+
+  tasks:
+  - name: Copying authorized keys file to root home directory
+    shell: sudo cp ~/.ssh/authorized_keys /root/.ssh/authorized_keys
+
+
+- hosts: remote
   vars_files:
     - vars.yml
-  gather_facts: false
-  sudo: true
+  gather_facts: False
+  sudo: yes
+  remote_user: root
 
   tasks:
   - name: Create the project directory.
-    file: state=directory path=${project_root}
+    file: state=directory path={{project_root}}
 
   - name: Create user.
-    user: home=${project_root}/home/ name=${project_name} state=present
+    user: home={{project_root}}/home/ name={{project_name}} state=present
 
   - name: Update the project directory.
-    file: group=${project_name} owner=${project_name} mode=755 state=directory path=${project_root}
+    file: group={{project_name}} owner={{project_name}} mode=755 state=directory path={{project_root}}
 
   - name: Create the code directory.
-    file: group=${project_name} owner=${project_name} mode=755 state=directory path=${project_root}/code/
+    file: group={{project_name}} owner={{project_name}} mode=755 state=directory path={{project_root}}/app/
+
+  - name: Create the .ssh directory
+    file: group={{project_name}} owner={{project_name}} mode=755 state=directory path={{project_root}}/home/.ssh/
+
+  - name: Create the known_hosts file.
+    file: path={{project_root}}/home/.ssh/known_hosts owner={{ project_name }} group={{ project_name }} state=touch
+
+  - name: Add known hosts to known_hosts file
+    lineinfile: dest={{project_root}}/home/.ssh/known_hosts regexp=^${item.host} line="${item.line}"
+    with_items:
+    - { "host": "bitbucket.org", "line": "bitbucket.org,131.103.20.167 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAubiN81eDcafrgMeLzaFPsw2kNvEcqTKl/VqLat/MaB33pZy0y3rJZtnqwR2qOOvbwKZYKiEO1O6VqNEBxKvJJelCq0dTXWT5pbO2gDXC6h6QDXCaHo6pOHGPUy+YBaGQRGuSusMEASYiWunYN0vCAI8QaXnWMXNMdFP3jHAJH0eDsoiGnLPBlBp4TNm6rYI74nMzgz3B9IikW4WVK+dc8KZJZWYjAuORU3jc1c/NPskD2ASinf8v3xnfXeukU0sJ5N6m5E8VLjObPEO+mN2t/FZTMZLiFqPWc/ALSqnMnnhwrNi2rbfg/rd/IpL8Le3pSBne8+seeFVBoGqzHM9yXw==" }
+
+  - name: Add known hosts to known_hosts file
+    lineinfile: dest={{project_root}}/home/.ssh/known_hosts regexp=^${item.host} line="${item.line}"
+    with_items:
+    - { "host": "cutenessmap.com", "line": "cutenessmap.com,54.193.45.45 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBF6CpC/Q1NuYGBmsJ4lSStXAHWijXTHocq1unKlUOopBn1JNZvkYKYm1wzKr2TiLRj0DBHq0d2Y4MGmv8MN7vTA="}
+
+  - name: Copying deploy key
+    copy: src={{deploy_key}} dest={{project_root}}/home/.ssh/id_rsa owner={{project_name}} group={{project_name}} mode=0600
+
+  - name: workaround to install postgresql with locale set 
+    shell: LANG=$locale LC_COLLATE=$locale LC_CTYPE=$locale LC_MESSAGES=$locale LC_MONETARY=$locale LC_NUMERIC=$locale LC_TIME=$locale LC_ALL=$locale  apt-get install -y postgresql 
 
   - name: Install required system packages.
     apt: pkg=${item} state=installed update-cache=yes
-    with_items: ${system_packages}
+    with_items: "${system_packages}"
 
   - name: Install required Python packages.
     easy_install: name=${item}
-    with_items: ${python_packages}
+    with_items: "{{ python_packages }}"
 
-  - name: Mount code folder.
-    mount: fstype=vboxsf opts=uid=${project_name},gid=${project_name} name=${project_root}/code/ src=${project_name} state=mounted
-    only_if: "$vm == 1"
-
-  - name: Create the SSH directory.
-    file: state=directory path=${project_root}/home/.ssh/
-    only_if: "$vm == 0"
-
-  - name: Upload SSH known hosts.
-    copy: src=known_hosts dest=${project_root}/home/.ssh/known_hosts mode=0600
-    only_if: "$vm == 0"
-
-  - name: Upload SSH key.
-    copy: src=key dest=${project_root}/home/.ssh/id_rsa mode=0600
-    only_if: "$vm == 0"
-
-  - name: Create the SSL directory.
-    file: state=directory path=${project_root}/home/ssl/
-
-  - name: Upload SSL private key.
-    copy: src=files/ssl/${project_name}.pem dest=${project_root}/home/ssl/${project_name}.pem
-
-  - name: Upload SSH public key.
-    copy: src=files/ssl/${project_name}.key.encrypted dest=${project_root}/home/ssl/${project_name}.key
-
-  - name: Change permissions.
-    shell: chown -R ${project_name}:${project_name} ${project_root}
+    #copy key for git repository
+    #setup database data
 
   - name: Install nginx configuration file.
-    copy: src=files/conf/nginx.conf dest=/etc/nginx/sites-enabled/${project_name}
-    notify: restart nginx
+    template: src=files/conf/nginx.conf.j2 dest=/etc/nginx/nginx.conf
 
-  - name: Install init scripts.
-    copy: src=files/init/${item}.conf dest=/etc/init/${project_name}_${item}.conf
-    with_items: ${initfiles}
+#=====This is for a locally hosted database=====
+# - hosts: remote
+#   vars_files:
+#     - vars.yml
+#   gather_facts: false
+#   sudo: true
+#   sudo_user: postgres
 
-  - name: Create database.
-    shell: ${project_root}/env/bin/python ${project_root}/code/webapp/manage.py sqlcreate --router=default | sudo -u postgres psql
-
-  handlers:
-    - include: handlers.yml
+#   tasks:
+#   - include: nessmap-provision.yml
 
 - include: deploy.yml
-
-- hosts: servers
-  vars_files:
-    - vars.yml
-  gather_facts: false
-  sudo: true
-
-  tasks:
-  - name: Restart services.
-    service: name=${project_name}_${item} state=restarted
-    with_items: ${initfiles}

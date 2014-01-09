@@ -1,5 +1,5 @@
 ---
-- hosts: local
+- hosts: servers
   vars_files:
     - vars.yml
   gather_facts: false
@@ -13,18 +13,43 @@
     # notify:
     #   - restart web frontend
 
-  # - name: Upload configuration.
-  #   copy: src=webapp_settings/local_settings.${nickname}.py dest=${project_root}/app/webapp/local_settings.py
+
+
+  - name: Upload configuration.
+    template: src=files/conf/{{local_settings_file}} dest={{project_root}}/app/{{project_name}}/local_settings.py
   #   when: "$vm == 0"
 
-  # - name: Upgrade the virtualenv.
-  #   pip: requirements=${project_root}/app/requirements.txt virtualenv=${project_root}/env/
+  - name: Update the virtualenv.
+    pip: requirements={{project_root}}/app/requirements.txt virtualenv=${project_root}/env/
 
-  # - name: Sync Django database.
-  #   shell: ${project_root}/env/bin/python ${project_root}/app/webapp/manage.py syncdb --migrate --noinput
+  - name: Sync Django database.
+    shell: "{{project_root}}/env/bin/python {{project_root}}/app/manage.py syncdb --migrate --noinput"
+
 
   # - name: Generate Django media.
   #   shell: ${project_root}/env/bin/python ${project_root}/app/webapp/manage.py generatemedia
 
+# - hosts: local
+#   vars_files:
+#     - vars.yml
+#   gather_facts: false
+#   sudo: true
+
+#   tasks:
+#   - name: Install application requirements.
+#     pip: requirements={{project_root}}/app/requirements.txt extra_args='--no-use-wheel'
+
   handlers:
     - include: handlers.yml
+
+- hosts: servers
+  vars_files:
+  - vars.yml
+  gather_facts: false
+  sudo: true
+  tasks:
+  - name: Copy supervisor script for gunicorn
+    template: src=files/conf/gunicorn_nessmap.conf.j2 dest=/etc/supervisor/conf.d/gunicorn_nessmap.conf
+
+  - name: Restart nessmap supervisor process.
+    supervisorctl: name={{project_name}} state=restarted

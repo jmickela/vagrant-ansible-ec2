@@ -1,17 +1,22 @@
 [remote:children]
 production
-staging
 
 [servers:children]
 production
-staging
 local
 
 [production]
-cutenessmap.com nickname=production vm=0 branch=master
+cutenessmap.com nickname=production vm=0 branch=master 
+
+[production:vars]
+local_settings_file=local_settings_ec2.py.j2
+domain_name=cutenessmap.com
+db_host=nessmap.ckj7bg2xrhan.us-west-1.rds.amazonaws.com
+db_port=5432
+db_pass=testtest
 
 [staging]
-staging.nessmap.com nickname=staging vm=0 branch=develop
+staging.nessmap.com nickname=staging vm=0 branch=develop domain_name=staging.cutenessmap.com
 
 [local]
 127.0.0.1 nickname=local vm=1 branch=master

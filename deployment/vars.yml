@@ -8,7 +8,6 @@ system_packages:
   - git
   # - libevent-dev
   - nginx
-  - gunicorn
   - postgresql
   - postgresql-server-dev-all
   - python-dev
@@ -16,10 +15,14 @@ system_packages:
   - redis-server
   - postfix
   - nano
+  - supervisor
+  - gdal-bin
+  - libgdal1-1.7.0
+  - postgresql-contrib
+  - postgresql-9.1-postgis
 python_packages:
   - pip
-  - virtualenv
-  - django
+  - virtualenv==1.10.1
   - psycopg2
 initfiles:
   - gunicorn

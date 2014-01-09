@@ -30,16 +30,20 @@
     with_items:
     - { "host": "bitbucket.org", "line": "bitbucket.org,131.103.20.167 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAubiN81eDcafrgMeLzaFPsw2kNvEcqTKl/VqLat/MaB33pZy0y3rJZtnqwR2qOOvbwKZYKiEO1O6VqNEBxKvJJelCq0dTXWT5pbO2gDXC6h6QDXCaHo6pOHGPUy+YBaGQRGuSusMEASYiWunYN0vCAI8QaXnWMXNMdFP3jHAJH0eDsoiGnLPBlBp4TNm6rYI74nMzgz3B9IikW4WVK+dc8KZJZWYjAuORU3jc1c/NPskD2ASinf8v3xnfXeukU0sJ5N6m5E8VLjObPEO+mN2t/FZTMZLiFqPWc/ALSqnMnnhwrNi2rbfg/rd/IpL8Le3pSBne8+seeFVBoGqzHM9yXw==" }
 
+  # - name: Add known hosts to known_hosts file
+  #   lineinfile: dest={{project_root}}/home/.ssh/known_hosts regexp=^${item.host} line="${item.line}"
+  #   - { "host": "cutenessmap.com", "line": "cutenessmap.com,54.193.45.45 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBF6CpC/Q1NuYGBmsJ4lSStXAHWijXTHocq1unKlUOopBn1JNZvkYKYm1wzKr2TiLRj0DBHq0d2Y4MGmv8MN7vTA="}
+
   - name: Copying deploy key
     copy: src={{deploy_key}} dest={{project_root}}/home/.ssh/id_rsa owner={{project_name}} group={{project_name}} mode=0600
 
   - name: workaround to install postgresql with locale set 
     shell: LANG=$locale LC_COLLATE=$locale LC_CTYPE=$locale LC_MESSAGES=$locale LC_MONETARY=$locale LC_NUMERIC=$locale LC_TIME=$locale LC_ALL=$locale  apt-get install -y postgresql 
 
-
   - name: Install required system packages.
     apt: pkg=${item} state=installed update-cache=yes
     with_items: "${system_packages}"
+
   - name: Install required system packages for Vagrant.
     apt: pkg=${item} state=installed update-cache=yes
     with_items: "${vagrant_packages}"
@@ -52,7 +56,7 @@
     #setup database data
 
   - name: Install nginx configuration file.
-    template: src=files/conf/nginx.conf.j2 dest=/etc/nginx/sites-enabled/{{ project_name }}
+    template: src=files/conf/nginx.conf.j2 dest=/etc/nginx/nginx.conf
     #notify: restart nginx
 
   # - name: Install init scripts.
@@ -64,8 +68,6 @@
 
 #   handlers:
 #     - include: handlers.yml
-
-- include: deploy.yml
 
 - hosts: local
   vars_files:
@@ -80,3 +82,5 @@
   # - name: Restart services.
   #   service: name={{project_name}}_{{item}} state=restarted
   #   with_items: "{{initfiles}}"
+
+- include: deploy.yml
