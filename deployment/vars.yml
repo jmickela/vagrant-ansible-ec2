@@ -1,8 +1,7 @@
-project_name: nessmap
-project_root: /var/projects/nessmap
+project_name: photomob
+project_root: /var/projects/photomob
 deploy_key: files/keys/deploy.pem
-project_repo: git@bitbucket.org:jmickela/nessmap-website.git
-locale: en_US.UTF-8
+project_repo: git@bitbucket.org:jmickela/photomob-website-2.git
 system_packages:
   - build-essential
   - git
@@ -16,13 +15,8 @@ system_packages:
   - postfix
   - nano
   - supervisor
-  - gdal-bin
-  - libgdal1-1.7.0
-  - postgresql-contrib
-  - postgresql-9.1-postgis
 python_packages:
   - pip
   - virtualenv==1.10.1
-  - psycopg2
 initfiles:
   - gunicorn

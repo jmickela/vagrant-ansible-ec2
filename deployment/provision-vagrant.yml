@@ -7,6 +7,12 @@
   sudo: true
 
   tasks:
+  #create local env at /home/vagrant/env
+  #load dev branch at /home/vagrant/app
+  #install requirements into virtual env
+
+
+
   - name: Create the project directory.
     file: state=directory path={{project_root}}
 
@@ -34,11 +40,11 @@
   #   lineinfile: dest={{project_root}}/home/.ssh/known_hosts regexp=^${item.host} line="${item.line}"
   #   - { "host": "cutenessmap.com", "line": "cutenessmap.com,54.193.45.45 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBF6CpC/Q1NuYGBmsJ4lSStXAHWijXTHocq1unKlUOopBn1JNZvkYKYm1wzKr2TiLRj0DBHq0d2Y4MGmv8MN7vTA="}
 
-  - name: Copying deploy key
-    copy: src={{deploy_key}} dest={{project_root}}/home/.ssh/id_rsa owner={{project_name}} group={{project_name}} mode=0600
+  # - name: Copying deploy key
+  #   copy: src={{deploy_key}} dest={{project_root}}/home/.ssh/id_rsa owner={{project_name}} group={{project_name}} mode=0600
 
-  - name: workaround to install postgresql with locale set 
-    shell: LANG=$locale LC_COLLATE=$locale LC_CTYPE=$locale LC_MESSAGES=$locale LC_MONETARY=$locale LC_NUMERIC=$locale LC_TIME=$locale LC_ALL=$locale  apt-get install -y postgresql 
+  # - name: workaround to install postgresql with locale set 
+  #   shell: LANG=$locale LC_COLLATE=$locale LC_CTYPE=$locale LC_MESSAGES=$locale LC_MONETARY=$locale LC_NUMERIC=$locale LC_TIME=$locale LC_ALL=$locale  apt-get install -y postgresql 
 
   - name: Install required system packages.
     apt: pkg=${item} state=installed update-cache=yes
@@ -52,11 +58,15 @@
     easy_install: name=${item}
     with_items: "{{ python_packages }}"
 
+    #pull in the dev repo
+
+  - name: Update the test virtualenv.
+    pip: requirements=/home/vagrant/app/requirements.txt virtualenv=/home/vagrant/env/
     #copy key for git repository
     #setup database data
 
-  - name: Install nginx configuration file.
-    template: src=files/conf/nginx.conf.j2 dest=/etc/nginx/nginx.conf
+  # - name: Install nginx configuration file.
+  #   template: src=files/conf/nginx.conf.j2 dest=/etc/nginx/nginx.conf
     #notify: restart nginx
 
   # - name: Install init scripts.
@@ -69,18 +79,18 @@
 #   handlers:
 #     - include: handlers.yml
 
-- hosts: local
-  vars_files:
-    - vars.yml
-  gather_facts: false
-  sudo: true
-  sudo_user: postgres
+# - hosts: local
+#   vars_files:
+#     - vars.yml
+#   gather_facts: false
+#   sudo: true
+#   sudo_user: postgres
 
-  tasks:
-  - include: nessmap-provision.yml
+#   tasks:
+#   - include: nessmap-provision.yml
 
   # - name: Restart services.
   #   service: name={{project_name}}_{{item}} state=restarted
   #   with_items: "{{initfiles}}"
 
-- include: deploy.yml
+# - include: deploy.yml
